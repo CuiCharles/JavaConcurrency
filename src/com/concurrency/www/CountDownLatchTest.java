@@ -1,5 +1,7 @@
 package com.concurrency.www;
 
+import com.sun.xml.internal.bind.v2.model.annotation.RuntimeAnnotationReader;
+
 import java.util.concurrent.CountDownLatch;
 
 
@@ -10,10 +12,7 @@ public class CountDownLatchTest {
 
 
 
-
-
-
-    public static void main(String[] args){
+    private static void test1(){
         final CountDownLatch latch = new CountDownLatch(2);
         new Thread(){
             public void run() {
@@ -53,6 +52,43 @@ public class CountDownLatchTest {
         }
 
 
+    }
 
+
+    private static void test2(){
+
+        int count = 10;
+        final CountDownLatch l = new CountDownLatch(count);
+        for(int i = 0;i < count; i++){
+            final int index = i+1;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.currentThread().sleep(1000L);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                    System.out.println("thread " + index + " has finished...");
+                    l.countDown();
+
+                }
+            }).start();
+        }
+
+
+        try{
+            l.await();
+        }catch (InterruptedException e){
+
+        }
+        System.out.println("now all threads have finished");
+    }
+
+
+
+    public static void main(String[] args){
+        //test1();
+        test2();
     }
 }
