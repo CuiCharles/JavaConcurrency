@@ -1,43 +1,87 @@
 package com.concurrency.www;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class ReentrantLockTest {
 
-    static int sum = 1000;
 
+    private static void demoLock(){
 
-    static class DepositThread extends Thread{
-        @Override
-        public void run() {
-            sum++;
-            System.out.println("add");
+        final int loopcount = 10000;
+        int threadcount = 10;
+
+        final SafeSeqWithLock seq = new SafeSeqWithLock();
+
+        final CountDownLatch l = new CountDownLatch(threadcount);
+
+        for(int i = 0; i < threadcount; ++i)
+        {
+            final int index = i;
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    for(int j = 0; j < loopcount; ++j)
+                    {
+
+                        seq.inc();
+
+                    }
+
+                    System.out.println("finished : " + index);
+                    l.countDown();
+
+                }
+            }).start();
         }
-    }
 
+        try {
+            l.await();
+        } catch (InterruptedException e) {
 
-
-    static class WithdrawThread extends Thread{
-        @Override
-        public void run() {
-            sum--;
-            System.out.println("mov");
+            e.printStackTrace();
         }
+
+        System.out.println("both have finished....");
+
+        System.out.println("SafeSeqWithLock:" + seq.get());
+
     }
-
-
 
 
 
 
     public static void main (String[] args){
 
-        for(int i = 0; i < 20; i++){
-            new DepositThread().start();
-            new WithdrawThread().start();
+
+        demoLock();
+
+    }
+
+
+}
+
+
+class SafeSeqWithLock{
+    private long count = 0;
+
+    private ReentrantLock lock = new ReentrantLock();
+
+
+    public void inc(){
+        lock.lock();
+        try{
+            count++;
+        }catch (Exception e){
+
+        }finally {
+            lock.unlock();
         }
+    }
 
-
-        System.out.println("after run:" + sum);
-
+    public long get(){
+        return count;
     }
 
 
